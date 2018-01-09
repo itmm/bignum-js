@@ -1,0 +1,18 @@
+.ok div {
+	background-color: #afa;
+}
+
+.failed div {
+	background-color: #faa;
+}
+
+.test-result {
+	display: flex;
+}
+
+.test-result div {
+	flex-grow: 1;
+	margin: 6pt 2pt;
+	padding: 2pt;
+	display: inline-block;
+}

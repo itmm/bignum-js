@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "webpack": "^3.10.0"
+  },
+  "name": "bignum-js",
+  "description": "Small library for doing big integer arithmetic in JavaScript. Only the functions needed for RSA encryption are implemented.",
+  "version": "1.0.0",
+  "main": "bignum.js",
+  "dependencies": {},
+  "author": "Timm Knape",
+  "license": "MIT"
+}
