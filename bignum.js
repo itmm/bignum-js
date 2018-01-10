@@ -3,12 +3,15 @@ let NUMBER_OF_DIGITS;
 let THOUSANDS_SEPARATOR;
 const ASCII_ZERO = 48;
 
-export const reconfig = (digits, thousands_separator) => {
-	if (! digits || digits.length <= 1) { digits = "0123456789"; }
-	if (! thousands_separator) { thousands_separator = ' '; }
-	DIGITS = digits;
-	NUMBER_OF_DIGITS = digits.length;
-	THOUSANDS_SEPARATOR = thousands_separator;
+export const reconfig = (options) => {
+	if (! options) { options = {}; }
+	if (! ('digits' in options) || (('digits' in options) && options.digits.length <= 1)) { 
+		options.digits = "0123456789";
+	}
+	if (! ('thousands_separator' in options)) { options.thousands_separator = ' '; }
+	DIGITS = options.digits;
+	NUMBER_OF_DIGITS = options.digits.length;
+	THOUSANDS_SEPARATOR = options.thousands_separator;
 }
 
 reconfig();
@@ -23,13 +26,14 @@ export const fromNumber = (value) => {
 
 export const fromString = (string) => {
 	let bignum = '';
+	const ten = fromNumber(10);
 	for (let i = 0; i < string.length; ++i) {
 		const idx = string.charCodeAt(i) - ASCII_ZERO;
+		if (idx > 9 || idx < 0 || (idx == 0 && bignum.length <= 0)) { continue; }
 		if (NUMBER_OF_DIGITS == 10) {
-			if (idx > 0 || (idx == 0 && bignum.length)) {
-				bignum = DIGITS.charAt(idx) + bignum;
-			}
+			bignum = DIGITS.charAt(idx) + bignum;
 		} else {
+			bignum = add(mult(bignum, ten), fromNumber(idx));
 		}
 	}
 	return bignum;

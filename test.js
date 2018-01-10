@@ -18,7 +18,10 @@ window.addEventListener('load', (event) => {
 
 				bn.reconfig();
 				const code = $code.innerText;
-				const got = eval(code);
+				let got = eval(code);
+
+				if (typeof(got) !== 'string') { got = got.toString(); }
+
 				$got.appendChild(document.createTextNode(got));
 
 				if (got == $expected.innerText) {

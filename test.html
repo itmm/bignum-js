@@ -34,16 +34,30 @@
 			<tr><td>bn.toString(bn.pow(bn.fromNumber(10), bn.fromNumber(8)))<td><td>100 000 000</td>
 		</table>
 
+		<h2>Comparison Operations</h2>
+		<p>Compare two numbers.</p>
+		<table>
+			<tr><th>Code<th>Result<th>Expected
+			<tr><td>bn.equals(bn.fromNumber(1234), bn.fromNumber(1234))<td><td>true</td>
+			<tr><td>bn.equals(bn.fromNumber(1234), bn.fromNumber(2345))<td><td>false</td>
+			<tr><td>bn.less(bn.fromNumber(1234), bn.fromNumber(2345))<td><td>true</td>
+			<tr><td>bn.less(bn.fromNumber(1234), bn.fromNumber(1234))<td><td>false</td>
+			<tr><td>bn.less(bn.fromNumber(2345), bn.fromNumber(1234))<td><td>false</td>
+		</table>
+
 		<h2>Configuration</h2>
 		<p>Test different formating and representation options.</p>
 		<table>
-			<tr><td>bn.reconfig(null, '.'); bn.toString(bn.fromNumber(1234))<td><td>1.234</td>
-			<tr><td>bn.reconfig('01'); bn.toString(bn.fromNumber(42))<td><td>42</td>
-			<tr><td>bn.reconfig('ax'); bn.toString(bn.fromNumber(42))<td><td>42</td>
-			<tr><td>bn.reconfig('ax'); bn.fromNumber(42)<td><td>axaxax</td>
-			<tr><td>bn.reconfig('ax'); bn.toString(bn.pow(bn.fromNumber(2), bn.fromNumber(8)))<td><td>256</td>
-			<tr><td>bn.reconfig('ax'); bn.pow(bn.fromNumber(2), bn.fromNumber(8))<td><td>aaaaaaaax</td>
-			<tr><td>bn.reconfig('0123456789abcdef'); bn.fromNumber(0xabcd)<td><td>dcba</td>
+			<tr><th>Code<th>Result<th>Expected
+			<tr><td>bn.reconfig({ thousands_separator: '.' }); bn.toString(bn.fromNumber(1234))<td><td>1.234</td>
+			<tr><td>bn.reconfig({ thousands_separator: '' }); bn.toString(bn.fromNumber(1234))<td><td>1234</td>
+			<tr><td>bn.reconfig({ digits: '01' }); bn.toString(bn.fromNumber(42))<td><td>42</td>
+			<tr><td>bn.reconfig({ digits: '01' }); bn.fromString('42')<td><td>010101</td>
+			<tr><td>bn.reconfig({ digits: 'ax' }); bn.toString(bn.fromNumber(42))<td><td>42</td>
+			<tr><td>bn.reconfig({ digits: 'ax' }); bn.fromNumber(42)<td><td>axaxax</td>
+			<tr><td>bn.reconfig({ digits: 'ax' }); bn.toString(bn.pow(bn.fromNumber(2), bn.fromNumber(8)))<td><td>256</td>
+			<tr><td>bn.reconfig({ digits: 'ax' }); bn.pow(bn.fromNumber(2), bn.fromNumber(8))<td><td>aaaaaaaax</td>
+			<tr><td>bn.reconfig({ digits: '0123456789abcdef' }); bn.fromNumber(0xabcd)<td><td>dcba</td>
 		</table>
 		<script src="test_all.js"></script>
 	</body>

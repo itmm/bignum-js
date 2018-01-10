@@ -6,12 +6,20 @@
 	background-color: #dfd;
 }
 
+.all-passed th {
+	background-color: #cfc;
+}
+
 .failed td {
 	background-color: #faa;
 }
 
 .something-failed {
 	background-color: #fdd;
+}
+
+.something-failed th {
+	background-color: #fcc;
 }
 
 .ok td, .all-passed th, .all-passed h1, .all-passed h2, .all-passed p {
@@ -36,4 +44,8 @@ td {
 	font-size: large;
 	margin: 6pt 2pt;
 	padding: 2pt;
+}
+
+h1, h2, th {
+	font-family: sans-serif;
 }
