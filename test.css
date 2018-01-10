@@ -1,18 +1,39 @@
-.ok div {
+.ok td {
 	background-color: #afa;
 }
 
-.failed div {
+.all-passed {
+	background-color: #dfd;
+}
+
+.failed td {
 	background-color: #faa;
 }
 
-.test-result {
-	display: flex;
+.something-failed {
+	background-color: #fdd;
 }
 
-.test-result div {
-	flex-grow: 1;
+.ok td, .all-passed th, .all-passed h1 {
+	color: #040;
+}
+
+.failed td, .something-failed th, .something-failed h1 {
+	color: #400;
+}
+
+table {
+	width: 80%;
+	margin: auto;
+}
+
+th {
+	text-align: left;
+}
+
+td {
+	font-family: monospace;
+	font-size: large;
 	margin: 6pt 2pt;
 	padding: 2pt;
-	display: inline-block;
 }
