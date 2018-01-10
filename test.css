@@ -14,17 +14,17 @@
 	background-color: #fdd;
 }
 
-.ok td, .all-passed th, .all-passed h1 {
+.ok td, .all-passed th, .all-passed h1, .all-passed h2, .all-passed p {
 	color: #040;
 }
 
-.failed td, .something-failed th, .something-failed h1 {
+.failed td, .something-failed th, .something-failed h1, .something-failed h2, .something-failed p {
 	color: #400;
 }
 
-table {
+table, p {
 	width: 80%;
-	margin: auto;
+	margin: 10pt auto 20pt auto;
 }
 
 th {

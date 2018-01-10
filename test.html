@@ -7,12 +7,43 @@
 	</head>
 	<body>
 		<h1>bignum-js unit-tests</h1>
-		<table id="test-results">
-			<tr>
-				<th>Code</th>
-				<th>Result</th>
-				<th>Expected</th>
-			</tr>
+
+		<h2>Conversion</h2>
+		<p>Convert to and from strings.</p>
+		<table>
+			<tr><th>Code<th>Result<th>Expected
+			<tr><td>bn.toString('')<td><td>0</td>
+			<tr><td>bn.toString(bn.fromNumber(1234))<td><td>1 234</td>
+			<tr><td>bn.toString(bn.fromString('1234'))<td><td>1 234</td>
+			<tr><td>bn.fromString('1 234')<td><td>4321</td>
+			<tr><td>bn.toString(bn.fromString('1 234'))<td><td>1 234</td>
+			<tr><td>bn.toString(bn.fromString(' abc 1+-*[2]34'))<td><td>1 234</td>
+		</table>
+
+		<h2>Basic Operations</h2>
+		<p>Test basic arithmetic operations.</p>
+		<table>
+			<tr><th>Code<th>Result<th>Expected
+			<tr><td>bn.toString(bn.add(bn.fromNumber(1234), bn.fromNumber(1234)))<td><td>2 468</td>
+			<tr><td>bn.toString(bn.add(bn.fromNumber(1234), bn.fromNumber(2345)))<td><td>3 579</td>
+			<tr><td>bn.toString(bn.sub(bn.fromNumber(1234), bn.fromNumber(1234)))<td><td>0</td>
+			<tr><td>bn.toString(bn.mult(bn.fromNumber(123), bn.fromNumber(10001)))<td><td>1 230 123</td>
+			<tr><td>bn.toString(bn.div(bn.fromNumber(123), bn.fromNumber(10)).result)<td><td>12</td>
+			<tr><td>bn.toString(bn.mod(bn.fromNumber(123), bn.fromNumber(100)))<td><td>23</td>
+			<tr><td>bn.toString(bn.pow(bn.fromNumber(10), bn.fromNumber(3)))<td><td>1 000</td>
+			<tr><td>bn.toString(bn.pow(bn.fromNumber(10), bn.fromNumber(8)))<td><td>100 000 000</td>
+		</table>
+
+		<h2>Configuration</h2>
+		<p>Test different formating and representation options.</p>
+		<table>
+			<tr><td>bn.reconfig(null, '.'); bn.toString(bn.fromNumber(1234))<td><td>1.234</td>
+			<tr><td>bn.reconfig('01'); bn.toString(bn.fromNumber(42))<td><td>42</td>
+			<tr><td>bn.reconfig('ax'); bn.toString(bn.fromNumber(42))<td><td>42</td>
+			<tr><td>bn.reconfig('ax'); bn.fromNumber(42)<td><td>axaxax</td>
+			<tr><td>bn.reconfig('ax'); bn.toString(bn.pow(bn.fromNumber(2), bn.fromNumber(8)))<td><td>256</td>
+			<tr><td>bn.reconfig('ax'); bn.pow(bn.fromNumber(2), bn.fromNumber(8))<td><td>aaaaaaaax</td>
+			<tr><td>bn.reconfig('0123456789abcdef'); bn.fromNumber(0xabcd)<td><td>dcba</td>
 		</table>
 		<script src="test_all.js"></script>
 	</body>
