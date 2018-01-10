@@ -3,6 +3,7 @@ import * as bn from "./bignum";
 let $root;
 
 const test = (source, expected) => {
+	bn.reconfig();
 	const got = eval(source);
 	const $result = document.createElement('DIV');
 	$result.classList.add('test-result');
@@ -33,12 +34,25 @@ const test = (source, expected) => {
 window.addEventListener('load', (event) => {
 	$root = document.getElementById('test-results');
 	window.bn = bn;
-	test('bn.beautify(bn.build(1234))', '1 234');
-	test('bn.beautify(bn.add(bn.build(1234), bn.build(1234)))', '2 468');
-	test('bn.beautify(bn.add(bn.build(1234), bn.build(2345)))', '3 579');
-	test('bn.beautify(bn.minus(bn.build(1234), bn.build(1234)))', '0');
-	test('bn.beautify(bn.multiply(bn.build(123), bn.build(10001)))', '1 230 123');
-	test('bn.beautify(bn.div(bn.build(123), bn.build(10)).result)', '12');
-	test('bn.beautify(bn.mod(bn.build(123), bn.build(100)))', '23');
-	test('bn.beautify(bn.power(bn.build(10), bn.build(8)))', '100 000 000');
+	test("bn.toString('')", "0");
+	test("bn.toString(bn.fromNumber(1234))", "1 234");
+	test("bn.toString(bn.fromString('1234'))", "1 234");
+	test("bn.fromString('1 234')", "4321");
+	test("bn.toString(bn.fromString('1 234'))", "1 234");
+	test("bn.toString(bn.fromString(' abc 1+-*[2]34'))", "1 234");
+	test("bn.toString(bn.add(bn.fromNumber(1234), bn.fromNumber(1234)))", "2 468");
+	test("bn.toString(bn.add(bn.fromNumber(1234), bn.fromNumber(2345)))", "3 579");
+	test("bn.toString(bn.sub(bn.fromNumber(1234), bn.fromNumber(1234)))", "0");
+	test("bn.toString(bn.mult(bn.fromNumber(123), bn.fromNumber(10001)))", "1 230 123");
+	test("bn.toString(bn.div(bn.fromNumber(123), bn.fromNumber(10)).result)", "12");
+	test("bn.toString(bn.mod(bn.fromNumber(123), bn.fromNumber(100)))", "23");
+	test("bn.toString(bn.pow(bn.fromNumber(10), bn.fromNumber(3)))", "1 000");
+	test("bn.toString(bn.pow(bn.fromNumber(10), bn.fromNumber(8)))", "100 000 000");
+	test("bn.reconfig(null, '.'); bn.toString(bn.fromNumber(1234))", "1.234");
+	test("bn.reconfig('01'); bn.toString(bn.fromNumber(42))", "42");
+	test("bn.reconfig('ax'); bn.toString(bn.fromNumber(42))", "42");
+	test("bn.reconfig('ax'); bn.fromNumber(42)", "axaxax");
+	test("bn.reconfig('ax'); bn.toString(bn.pow(bn.fromNumber(2), bn.fromNumber(8)))", "256");
+	test("bn.reconfig('ax'); bn.pow(bn.fromNumber(2), bn.fromNumber(8))", "aaaaaaaax");
+	test("bn.reconfig('0123456789abcdef'); bn.fromNumber(0xabcd)", "dcba");
 });
