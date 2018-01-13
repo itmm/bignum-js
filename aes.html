@@ -1,0 +1,97 @@
+<doctype html>
+<html>
+	<head>
+		<title>AES-js</title>
+		<meta charset="utf-8">
+		<link 
+			rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+			integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+			crossorigin="anonymous"
+		>
+		<link
+			rel="stylesheet"
+			href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+			integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+			crossorigin="anonymous"
+		>
+		<link rel="stylesheet" href="aes.css">
+	</head>
+	<body>
+		<div class="container">
+			<h1>AES-js</h1>
+			<h2>Confidental Part</h2>
+			<form class="form-horizontal">
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="prime-1">First Prime <i>p</i><sub>1</sub></math></label>
+					<div class="col-sm-10"><input class="form-control" id="prime-1" value="11"></div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="prime-2">Second Prime <i>p</i><sub>2</sub></label>
+					<div class="col-sm-10"><input class="form-control" id="prime-2" value="13"></div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="phi">&phi;(<i>N</i>)</label>
+					<div class="col-sm-10"><p class="form-control-static" id="phi"></p></div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="gcd">gcd(<i>e</i>, &phi;(<i>N</i>))</label>
+					<div class="col-sm-10"><p class="form-control-static" id="gcd"></p></div>
+				</div>
+			</form>
+
+			<h2>Public Part</h2>
+
+			<form class="form-horizontal">
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="base">Base <i>e</i><br>(needs gcd(<i>e</i>, &phi;(<i>N</i>)) = 1)</label>
+					<div class="col-sm-10"><input class="form-control" id="base" value="23"></div>
+				</div>
+			</form>
+
+			<h2>Keys</h2>
+
+			<form class="form-horizontal">
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="public-key">Public Key <i>N</i> = <i>p</i><sub>1</sub> &times; <i>p</i><sub>2</sub></label>
+					<div class="col-sm-10"><p class="form-control-static" id="public-key"></div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="private-key">Private Key</label>
+					<div class="col-sm-10"><p class="form-control-static" id="private-key"></div>
+				</div>
+			</form>
+
+			<h2>Messages</h2>
+
+			<form class="form-horizontal">
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="public-key">Private Message</label>
+					<div class="col-sm-10"><input class="form-control" id="private-message" value="7"></div>
+				</div>
+				<div class="row">
+					<div id="direction">
+						<svg viewbox="0 0 50 50" width="50" height="50">
+							<polyline points="0,20 15,20 15,0 35,0 35,20 50,20 25,50"></polyline>
+						</svg>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-sm-2 control-label" for="private-key">Public Message</label>
+					<div class="col-sm-10"><input class="form-control" id="public-message"></div>
+				</div>
+			</form>
+		</div>
+		<script
+			  src="https://code.jquery.com/jquery-3.2.1.min.js"
+			  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+			  crossorigin="anonymous"
+		></script>
+		<script
+			src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+			integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+			crossorigin="anonymous"
+		></script>
+		<script src="aes_all.js"></script>
+	</body>
+</html>

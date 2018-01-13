@@ -29,9 +29,26 @@
 			<tr><td>bn.toString(bn.sub(bn.fromNumber(1234), bn.fromNumber(1234)))<td><td>0</td>
 			<tr><td>bn.toString(bn.mult(bn.fromNumber(123), bn.fromNumber(10001)))<td><td>1 230 123</td>
 			<tr><td>bn.toString(bn.div(bn.fromNumber(123), bn.fromNumber(10)).result)<td><td>12</td>
+			<tr><td>bn.toString(bn.div(bn.fromNumber(21), bn.fromNumber(15)).result)<td><td>1</td>
+			<tr><td>bn.toString(bn.div(bn.fromNumber(21), bn.fromNumber(15)).mod)<td><td>6</td>
 			<tr><td>bn.toString(bn.mod(bn.fromNumber(123), bn.fromNumber(100)))<td><td>23</td>
 			<tr><td>bn.toString(bn.pow(bn.fromNumber(10), bn.fromNumber(3)))<td><td>1 000</td>
 			<tr><td>bn.toString(bn.pow(bn.fromNumber(10), bn.fromNumber(8)))<td><td>100 000 000</td>
+		</table>
+
+		<h2>Negative Numbers</h2>
+		<p>Test basic arithmetic operations.</p>
+		<table>
+			<tr><th>Code<th>Result<th>Expected
+			<tr><td>bn.toString(bn.sub(bn.fromNumber(6), bn.fromNumber(10)))<td><td>-4</td>
+			<tr><td>bn.toString(bn.add(bn.fromNumber(-5), bn.fromNumber(-8)))<td><td>-13</td>
+			<tr><td>bn.toString(bn.div(bn.fromNumber(-10), bn.fromNumber(8)).result)<td><td>-1</td>
+			<tr><td>bn.toString(bn.div(bn.fromNumber(-10), bn.fromNumber(8)).mod)<td><td>-2</td>
+			<tr><td>bn.toString(bn.div(bn.fromNumber(-10), bn.fromNumber(-8)).result)<td><td>1</td>
+			<tr><td>bn.toString(bn.div(bn.fromNumber(-10), bn.fromNumber(-8)).mod)<td><td>-2</td>
+			<tr><td>bn.toString(bn.div(bn.fromNumber(-4), bn.fromNumber(8)).mod)<td><td>-4</td>
+			<tr><td>bn.toString(bn.sub(bn.fromNumber(8), bn.fromNumber(0)))<td><td>8</td>
+			<tr><td>bn.toString(bn.sub(bn.fromNumber(0), bn.fromNumber(8)))<td><td>-8</td>
 		</table>
 
 		<h2>Comparison Operations</h2>
