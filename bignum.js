@@ -1,203 +1,278 @@
-let DIGITS;
-let NUMBER_OF_DIGITS;
 let THOUSANDS_SEPARATOR;
+const MAX_SLICE = 0xffffffff >>> 0;
 const ASCII_ZERO = 48;
+
+const BN_ZERO = { pos: true, value: new Uint32Array() };
+const BN_TEN = { pos: true, value: new Uint32Array([10]) };
+const BN_SHIFT = { pos:true, value: new Uint32Array([0, 1]) };
 
 export const reconfig = (options) => {
 	if (! options) { options = {}; }
-	if (! ('digits' in options) || (('digits' in options) && options.digits.length <= 1)) { 
-		options.digits = "0123456789";
-	}
 	if (! ('thousands_separator' in options)) { options.thousands_separator = ' '; }
-	DIGITS = options.digits;
-	NUMBER_OF_DIGITS = options.digits.length;
 	THOUSANDS_SEPARATOR = options.thousands_separator;
 }
 
 reconfig();
 
-export const fromNumber = (value) => {
-	let bignum = '';
-	if (value < 0) { bignum = '-'; value = -value; }
-	for (; value > 0; value = Math.trunc(value / NUMBER_OF_DIGITS)) { 
-		bignum += DIGITS.charAt(value % NUMBER_OF_DIGITS); 
-	}
-	return bignum;
+export const fromNumber = (bn_res, value) => {
+	let ui_value = value >>> 0;
+	if (value < 0 || value > MAX_SLICE || value != ui_value) { console.log("failed with [" + value + "]"); return null; }
+
+	if (! bn_res) { bn_res = {}; }
+	bn_res.pos = true;
+	bn_res.value = ui_value ? new Uint32Array([ui_value]) : new Uint32Array();
+	return bn_res;
 };
 
-const negate = (bn) => {
-	if (bn.length > 0 && bn.charAt(0) === '-') {
-		return bn.substr(1);
-	} else if (bn.length > 0) {
-		return '-' + bn;
-	} else {
-		return bn;
+export const copy = (bn_res, bn_from) => {
+	if (! bn_res) { bn_res = {}; }
+
+	if (bn_res !== bn_from) {
+		bn_res.pos = bn_from.pos;
+		bn_res.value = new Uint32Array(bn_from.value);
 	}
+	return bn_res;
+}
+
+export const negate = (bn_res, bn_num) => {
+	if (! bn_res) { bn_res = {}; }
+
+	bn_res.pos = ! bn_res.pos;
+	if (bn_res !== bn_num) {
+		bn_res.value = new Uint32Array(bn.value);
+	}
+	return bn_res;
 };
 
-export const fromString = (string) => {
-	let bignum = '';
+export const abs = (bn_res, bn_num) => {
+	if (! bn_res) { bn_res = {}; }
 
-	let start = 0;
-	let negative = false;
-	if (string.length > 0 && string.charAt(0) === '-') {
-		negative = true;
-		start = 1;
+	bn_res.pos = true;
+	if (bn_res !== bn_num) {
+		bn_res.value = new Uint32Array(bn_num.value);
 	}
+	return bn_res;
+};
 
-	const ten = fromNumber(10);
-	for (let i = start; i < string.length; ++i) {
+export const fromString = (bn_res, string) => {
+	bn_res = fromNumber(bn_res, 0);
+	bn_res.pos = string.length <= 0 || string.charAt(0) !== '-';
+
+	let bn_idx = BN_ZERO;
+
+	for (let i = 0; i < string.length; ++i) {
 		const idx = string.charCodeAt(i) - ASCII_ZERO;
-		if (idx > 9 || idx < 0 || (idx === 0 && bignum.length <= 0)) { continue; }
-		if (NUMBER_OF_DIGITS == 10) {
-			bignum = DIGITS.charAt(idx) + bignum;
-		} else {
-			bignum = add(mult(bignum, ten), fromNumber(idx));
-		}
+		if (idx > 9 || idx < 0 || (idx === 0 && equals(bn_res, BN_ZERO))) { continue; }
+		mult(bn_res, BN_TEN);
+		add(bn_res, fromNumber(bn_idx, idx));
 	}
 
-	if (negative) { bignum = negate(bignum); }
-	return bignum;
+	return bn_res;
 };
 
-export const toString = (bignum) => {
-	if (bignum.length <= 0) { return '0'; }
-
-	let string = '';
-	let start = 0;
-
-	if (bignum.length > 0 && bignum.charAt(0) === '-') {
-		start = 1;
+export const equals = (bn_a, bn_b) => { 
+	if (bn_a.pos != bn_b.pos) { return false; }
+	const max = Math.max(bn_a.value.length, bn_b.value.length);
+	for (let i = 0; i < max; ++i) {
+		const ui_a = i < bn_a.value.length ? bn_a.value[i] : (0 >>> 0);
+		const ui_b = i < bn_b.value.length ? bn_b.value[i] : (0 >>> 0);
+		if (ui_a !== ui_b) { return false; }
 	}
-
-	if (NUMBER_OF_DIGITS == 10) {
-		for (let i = start; i < bignum.length; ++i) {
-			if (i % 3 == 0 && i > 0) { string = THOUSANDS_SEPARATOR + string; }
-			string = String.fromCharCode(DIGITS.indexOf(bignum.charAt(i)) + ASCII_ZERO) + string;
-		}
-	} else {
-		const ten = fromNumber(10);
-		let i = 0;
-		while (bignum.length) {
-			if (i % 3 == 0 && i > 0) { string = THOUSANDS_SEPARATOR + string; }
-			const dd = div(bignum, ten);
-			let digit = 0;
-			for (let j = dd.mod.length - 1; j >= 0; --j) {
-				digit = digit * NUMBER_OF_DIGITS + DIGITS.indexOf(dd.mod.charAt(j));
-			}
-			string = String.fromCharCode(digit + ASCII_ZERO) + string;
-			bignum = dd.result;
-			++i;
-		}
-	}
-
-	if (start === 1) { string = '-' + string; }
-	return string;
+	return true;
 };
 
-export const add = (bn_a, bn_b) => {
-	let a_neg = bn_a.length > 0 && bn_a.charAt(0) === '-';
-	let b_neg = bn_b.length > 0 && bn_b.charAt(0) === '-';
-
-	if (a_neg && ! b_neg) { return sub(bn_b, bn_a.substr(1)); }
-	if (! a_neg && b_neg) { return sub(bn_a, bn_b.substr(1)); }
-
-	let start = 0;
-	if (a_neg && b_neg) { start = 1; }
-
-	let bn_result = '';
-	let carry = 0;
-
-	for (let i = start; i < bn_a.length || i < bn_b.length || carry > 0; ++i) {
-		let digit = carry;
-		if (i < bn_a.length) { digit += DIGITS.indexOf(bn_a.charAt(i)); }
-		if (i < bn_b.length) { digit += DIGITS.indexOf(bn_b.charAt(i)); };
-		if (digit >= NUMBER_OF_DIGITS) { digit -= NUMBER_OF_DIGITS; carry = 1; } else { carry = 0; }
-		bn_result += DIGITS.charAt(digit);
-	}
-
-	if (start == 1) { bn_result = negate(bn_result); }
-	return bn_result;
-};
-
-export const equals = (bn_a, bn_b) => { return bn_a == bn_b; };
-
-export const less = (bn_a, bn_b) => {
-	let a_neg = bn_a.length > 0 && bn_a.charAt(0) === '-';
-	let b_neg = bn_b.length > 0 && bn_b.charAt(0) === '-';
-	if (a_neg && ! b_neg) { return true; }
-	if (! a_neg && b_neg) { return false; }
-
-	let min = (a_neg && b_neg) ? 1 : 0
-	for (let i = Math.max(bn_a.length, bn_b.length) - 1; i >= min; --i) {
-		const ca = i < bn_a.length ? DIGITS.indexOf(bn_a.charAt(i)) : 0;
-		const cb = i < bn_b.length ? DIGITS.indexOf(bn_b.charAt(i)) : 0;
+export const abs_less = (bn_a, bn_b) => {
+	const max = Math.max(bn_a.value.length, bn_b.value.length);
+	for (let i = max - 1; i >= 0; --i) {
+		const ca = i < bn_a.length ? bn_a.value[i] : (0 >>> 0);
+		const cb = i < bn_b.length ? bn_b.value[i] : (0 >>> 0);
 		if (ca < cb) { return true; }
 		if (ca > cb) { return false; }
 	}
 	return false;
+}
+
+export const less = (bn_a, bn_b) => {
+	if (bn_a.pos && ! bn_b.pos) { return false; }
+	if (! bn_a.pos && bn_b.pos) { return true; }
+
+	if (! bn_a.pos && ! bn_b.pos) {
+		negate(bn_a, bn_a); negate(bn_b, bn_b);
+		const res = less(bn_b, bn_a);
+		negate(bn_b, bn_b); negate(bn_a, bn_a);
+		return res;
+	}
+
+	return abs_less(bn_a, bn_b);
 };
+
+export const toString = (bn_num) => {
+	if (! bn_num || bn_num.value.length <= 0) { return '0'; }
+
+	let res = '';
+
+	let cur = abs(null, bn_num);
+	let mod = {};
+
+	console.log("cur == " + cur.value);
+
+	const DIGITS = "0123456789";
+
+	for (let i = 0; ! equals(BN_ZERO, cur); ++i) {
+		if (i % 3 == 0 && i > 0) { res = THOUSANDS_SEPARATOR + res; }
+		div(cur, mod, cur, BN_TEN);
+		res = (mod.value.length ? DIGITS.charAt(mod.value[0]) : '0') + res;
+	}
+
+	return bn_num.pos ? res : ('-' + res);
+};
+
+export const add = (bn_res, bn_a, bn_b) => {
+	if (! bn_a.pos && bn_b.pos) { 
+		if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
+		bn_res = negate(bn_res, bn_a);
+		return sub(bn_res, bn_b, bn_res);
+	}
+	if (bn_a.pos && ! bn_b.pos) {
+		if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
+		bn_res = negate(bn_res, bn_b);
+		return sub(bn_res, bn_a, bn_res); 
+		}
+
+	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
+	if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
+
+	let res = [];
+
+	let carry = 0 >>> 0;
+	let max = Math.max(bn_a.value.length, bn_b.value.length);
+	for (let i = 0; i < max || carry > 0; ++i) {
+		let slice = carry;
+		let room = MAX_SLICE - slice;
+		carry = 0 >>> 0;
+		if (i < bn_a.value.length) {
+			const ui_a = bn_a.value[i];
+			if (room >= ui_a) {
+				slice += ui_a;
+				room -= ui_a;
+			} else {
+				++carry;
+				slice = (slice + ui_a) >>> 0;
+				room = MAX_SLICE - slice;
+			}
+		}
+		if (i < bn_b.value.length) {
+			const ui_b = bn_b.value[i];
+			if (room >= ui_b) {
+				slice += ui_b;
+				room -= ui_b;
+			} else {
+				++carry;
+				slice = (slice + ui_b) >>> 0;
+				room = MAX_SLICE - slice;
+			}
+		}
+		res.push(slice);
+	}
+
+	bn_res = copy(bn_res, BN_ZERO);
+	bn_res.pos = bn_a.pos;
+	bn_res.value = new Uint32Array(res.reverse());
+	return bn_res;
+};
+
 
 const err = (message) => { if (console && console.log) { console.log(message); } };
 
 const trim = (bn) => {
 	let i;
-	const zero = DIGITS.charAt(0);
-	for (i = bn.length - 1; i >= 0 && bn.charAt(i) == zero; --i);
-	return bn.substring(0, i + 1);
+	for (i = bn.value.length - 1; i >= 0 && bn.value[i] == 0; --i) {};
+	if (i < bn.value.length - 1) { bn.value = bn.value.subarray(0, i + 1); }
+	return bn;
 }
 
-export const sub = (bn_a, bn_b) => {
-	let a_neg = bn_a.length > 0 && bn_a.charAt(0) === '-';
-	let b_neg = bn_b.length > 0 && bn_b.charAt(0) === '-';
-	if (a_neg && ! b_neg) { return negate(add(negate(bn_a), bn_b)); }
-	if (! a_neg && b_neg) { return add(bn_a, negate(bn_b)); }
+export const sub = (bn_res, bn_a, bn_b) => {
+	if (! bn_a.pos && bn_b.pos) {
+		if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
+		bn_res = negate(bn_res, bn_a);
+		bn_res = add(bn_res, bn_b);
+		return negate(bn_res, bn_res);
+	}
+	if (bn_a.pos && ! bn_b.pos) { 
+		if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
+		bn_res = negate(bn_res, bn_b);
+		return add(bn_res, bn_a, bn_res);
+	}
 
-	if (a_neg && b_neg) { bn_a = negate(bn_a); bn_b = negate(bn_b); }
+	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
+	if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
 
-	let bn_result = '';
 	if (less(bn_a, bn_b)) { 
-		const bn_inv = sub(bn_b, bn_a);
-		if (a_neg && b_neg) {
-			return bn_inv;
-		} else {
-			return negate(bn_inv);
-		}
+		bn_res = sub(bn_res, bn_b, bn_a);
+		return negate(bn_res, bn_res);
 	}
 
 	let carry = 0;
-	for (let i = 0; i < bn_a.length; ++i) {
-		let digit = DIGITS.indexOf(bn_a.charAt(i)) + carry;
-		if (i < bn_b.length) { digit -= DIGITS.indexOf(bn_b.charAt(i)); }
-		if (digit < 0) { digit += NUMBER_OF_DIGITS; carry = -1; } else { carry = 0; }
-		bn_result += DIGITS.charAt(digit);
+	let res = [];
+
+	for (let i = 0; i < bn_a.value.length; ++i) {
+		let slice = bn_a.value[i];
+		if (slice >= carry) {
+			slice -= carry;
+			carry = 0;
+		} else {
+			slice = MAX_SLICE - slice - (carry - 1);
+			carry = 1;
+		}
+
+		if (i < bn_b.value.length) {
+			const ui_b = bn_b.value[i];
+			if (slice >= ui_b) {
+				slice -= ui_b;
+			} else {
+				slice = MAX_SLICE - slice - (ui_b - 1);
+				++carry;
+			}
+		}
+
+		res.push(slice);
 	}
-	if (carry < 0) { err('underflow ignoring last carry'); }
+	if (carry) { err('underflow ignoring last carry'); }
 
-	if (a_neg && b_neg) { bn_result = negate(bn_result); }
-
-	return trim(bn_result);
+	if (! bn_res) { bn_res = {}; }
+	bn_res.pos = bn_a.pos;
+	bn_res.value = new Uint32Array(res.reverse());
+	console.log("trim 1");
+	return trim(bn_res);
 };
 
-const mult_digit = (bignum, digit) => {
-	switch (digit) {
-		case 0: return '';
-		case 1: return trim(bignum);
+const mult_digit = (bn_res, bn_a, ui_b) => {
+	switch (ui_b) {
+		case 0: return copy(bn_res, BN_ZERO);
+		case 1: 
+			console.log("trim 2");
+			return trim(bn_a);
 		default: break;
 	}
 
-	let bn_product = '';
+	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
+	bn_res = copy(bn_res, BN_ZERO);
+
 	let carry = 0;
-	for (let i = 0; i < bignum.length || carry; ++i) {
-		let simple_product = carry;
+	/*
+	for (let i = 0; i < bna_value.length || carry; ++i) {
+		let ui_slice = carry;
+		carry = 0;
+
 		if (i < bignum.length) { 
 			simple_product += digit * DIGITS.indexOf(bignum.charAt(i));
 		}
 		bn_product += DIGITS.indexOf(simple_product % NUMBER_OF_DIGITS);
 		carry = Math.trunc(simple_product / NUMBER_OF_DIGITS);
 	}
-
-	return trim(bn_product);
+*/
+			console.log("trim 3");
+	return trim(bn_res);
 };
 
 export const mult = (bn_a, bn_b, bn_mod) => {
@@ -219,51 +294,87 @@ export const mult = (bn_a, bn_b, bn_mod) => {
 	return mod(bn_result, bn_mod);
 };
 
-const div_single = (bn_a, bn_b) => {
-	if (bn_b.length <= 0) { err("divide by zero"); return { digit: 0, mod: '' }; }
-	if (less(bn_a, bn_b)) { return { digit: 0, mod: bn_a }; }
+const div_single = (bn_mod, bn_a, bn_b) => {
+	if (equals(bn_b, BN_ZERO)) { err("divide by zero"); return null; }
+	if (less(bn_a, bn_b)) { copy(bn_mod, bn_a); return 0; }
 
-	for (let digit = NUMBER_OF_DIGITS - 1;; --digit) {
-		const bn_value = mult_digit(bn_b, digit);
-		if (! less(bn_a, bn_value)) {
-			return { digit: digit, mod: sub(bn_a, bn_value) };
+	let ui_min = 0 >>> 0;
+	let ui_max = MAX_SLICE;
+	let ui_candidate;
+	let bn_candidate = null;
+
+	while (ui_min < ui_max) {
+		const ui_range = ui_max - ui_min;
+		ui_candidate = ui_min + (ui_range >> 1);
+		bn_candidate = mult_digit(bn_candidate, bn_b, ui_candidate);
+		if (equals(bn_candidate, bn_a)) { 
+			copy(bn_mod, BN_ZERO); return ui_candidate; 
+		} else if (less(bn_candidate, bn_a)) {
+			ui_min = ui_candidate;
+		} else {
+			ui_max = ui_candidate - 1;
 		}
+
 	}
+	copy(bn_mod, bn_candidate);
+	return ui_min; 
 }
 
-export const div = (bn_a, bn_b) => {
-	let a_neg = bn_a.length > 0 && bn_a.charAt(0) === '-';
-	let b_neg = bn_b.length > 0 && bn_b.charAt(0) === '-';
+const shift = (bn) => {
+	if (! equals(bn, BN_ZERO)) {
+		let array = bn.value.values();
+		array.push(0 >>> 0);
+		bn.value = new Uint32Array(array);
+	}	
+	return bn;
+}
 
-	if (a_neg) { bn_a = negate(bn_a); }
-	if (b_neg) { bn_b = negate(bn_b); }
+export const div = (bn_res, bn_mod, bn_a, bn_b) => {
+	if (! bn_res) { bn_res = {}; }
 
-	if (bn_b.length <= 0) { err("divide by zero"); return { result: '', mod: '' }; }
+	const res_pos = (bn_a.pos == bn_b.pos);
 
-	if (less(bn_a, bn_b)) { 
-		if (a_neg !== b_neg) { bn_a = negate(bn_a); }
-		return { result: '', mod: bn_a };
-	}
+	if (bn_res === bn_a || bn_mod === bn_a) { bn_a = copy({}, bn_a); }
+	if (bn_res === bn_b || bn_mod === bn_b) { bn_b = copy({}, bn_b); }
 
-	let bn_result = '';
-	let cur = '';
-	for (let i = bn_a.length - 1; i >= 0; --i) {
-		cur = bn_a.charAt(i) + cur;
-		const dd = div_single(trim(cur), bn_b);
-		if (dd.digit > 0 || bn_result.length > 0) {
-			bn_result = DIGITS.charAt(dd.digit) + bn_result;
+	if (equals(BN_ZERO, bn_b)) { err("divide by zero"); return null; }
+
+	if (abs_less(bn_a, bn_b)) {
+		copy(bn_res, BN_ZERO);
+		if (res_pos == bn_a.bos) {
+			copy(bn_mod, bn_a);
+		} else {
+			negate(bn_mod, bn_a);
 		}
-		cur = dd.mod;
+		return bn_res;
 	}
 
-	if (a_neg !== b_neg) { bn_result = negate(bn_result); cur = negate(cur); }
-	if (a_neg && b_neg) { cur = negate(cur); }
+	bn_mod = copy(bn_mod, BN_ZERO);
+	let bn_small = null;
 
-	return { result : bn_result, mod: cur };
+	let res = [];
+	for (let i = bn_a.value.length - 1; i >= 0; --i) {
+		bn_small = fromNumber(bn_small, bn_a.value[i]);
+		shift(bn_mod);
+		add(bn_mod, bn_mod, bn_small);
+		const ui_digit = div_single(bn_mod, bn_mod, bn_b);
+		if (ui_digit > 0 || res.length) {
+			res.push(ui_digit);
+		}
+	}
+
+	if (! bn_res) { bn_res = {}; }
+	console.log("div [" + bn_res + "]");
+	bn_res.pos = res_pos;
+	bn_res.value = new Uint32Array(res.reverse());
+	return bn_res;
 };
 
 export const mod = (bignum, bn_mod) => {
-	if (! bn_mod || bn_mod.length <= 0) { return trim(bignum); }
+	if (! bn_mod || bn_mod.length <= 0) {
+		console.log("trim 5");
+		return trim(bignum); 
+	}
 	let result = div(bignum, bn_mod);
 	return result.mod;
 };
