@@ -37,9 +37,9 @@ export const copy = (bn_res, bn_from) => {
 export const negate = (bn_res, bn_num) => {
 	if (! bn_res) { bn_res = {}; }
 
-	bn_res.pos = ! bn_res.pos;
+	bn_res.pos = ! bn_num.pos;
 	if (bn_res !== bn_num) {
-		bn_res.value = new Uint32Array(bn.value);
+		bn_res.value = new Uint32Array(bn_num.value);
 	}
 	return bn_res;
 };
@@ -58,13 +58,13 @@ export const fromString = (bn_res, string) => {
 	bn_res = fromNumber(bn_res, 0);
 	bn_res.pos = string.length <= 0 || string.charAt(0) !== '-';
 
-	let bn_idx = BN_ZERO;
+	let bn_idx = copy(null, BN_ZERO);
 
 	for (let i = 0; i < string.length; ++i) {
 		const idx = string.charCodeAt(i) - ASCII_ZERO;
 		if (idx > 9 || idx < 0 || (idx === 0 && equals(bn_res, BN_ZERO))) { continue; }
-		mult(bn_res, BN_TEN);
-		add(bn_res, fromNumber(bn_idx, idx));
+		mult_digit(bn_res, bn_res, 10);
+		add(bn_res, bn_res, fromNumber(bn_idx, idx));
 	}
 
 	return bn_res;
@@ -84,8 +84,8 @@ export const equals = (bn_a, bn_b) => {
 export const abs_less = (bn_a, bn_b) => {
 	const max = Math.max(bn_a.value.length, bn_b.value.length);
 	for (let i = max - 1; i >= 0; --i) {
-		const ca = i < bn_a.length ? bn_a.value[i] : (0 >>> 0);
-		const cb = i < bn_b.length ? bn_b.value[i] : (0 >>> 0);
+		const ca = i < bn_a.value.length ? bn_a.value[i] : (0 >>> 0);
+		const cb = i < bn_b.value.length ? bn_b.value[i] : (0 >>> 0);
 		if (ca < cb) { return true; }
 		if (ca > cb) { return false; }
 	}
@@ -109,6 +109,8 @@ export const less = (bn_a, bn_b) => {
 export const toString = (bn_num) => {
 	if (! bn_num || bn_num.value.length <= 0) { return '0'; }
 
+	let res = '' + bn_num.value[0];
+	/*
 	let res = '';
 
 	let cur = abs(null, bn_num);
@@ -123,7 +125,7 @@ export const toString = (bn_num) => {
 		div(cur, mod, cur, BN_TEN);
 		res = (mod.value.length ? DIGITS.charAt(mod.value[0]) : '0') + res;
 	}
-
+*/
 	return bn_num.pos ? res : ('-' + res);
 };
 
@@ -175,7 +177,7 @@ export const add = (bn_res, bn_a, bn_b) => {
 		res.push(slice);
 	}
 
-	bn_res = copy(bn_res, BN_ZERO);
+	if (! bn_res) { bn_res = {}; }
 	bn_res.pos = bn_a.pos;
 	bn_res.value = new Uint32Array(res.reverse());
 	return bn_res;
@@ -195,7 +197,7 @@ export const sub = (bn_res, bn_a, bn_b) => {
 	if (! bn_a.pos && bn_b.pos) {
 		if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
 		bn_res = negate(bn_res, bn_a);
-		bn_res = add(bn_res, bn_b);
+		bn_res = add(bn_res, bn_res, bn_b);
 		return negate(bn_res, bn_res);
 	}
 	if (bn_a.pos && ! bn_b.pos) { 
@@ -242,56 +244,78 @@ export const sub = (bn_res, bn_a, bn_b) => {
 	if (! bn_res) { bn_res = {}; }
 	bn_res.pos = bn_a.pos;
 	bn_res.value = new Uint32Array(res.reverse());
-	console.log("trim 1");
 	return trim(bn_res);
 };
 
 const mult_digit = (bn_res, bn_a, ui_b) => {
 	switch (ui_b) {
 		case 0: return copy(bn_res, BN_ZERO);
-		case 1: 
-			console.log("trim 2");
-			return trim(bn_a);
-		default: break;
+		case 1: return copy(bn_res, bn_a);
 	}
 
 	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
-	bn_res = copy(bn_res, BN_ZERO);
 
-	let carry = 0;
-	/*
-	for (let i = 0; i < bna_value.length || carry; ++i) {
-		let ui_slice = carry;
-		carry = 0;
+	const lo_digit = ui_b & 0xffff;
+	const hi_digit = ui_b >> 16;
 
-		if (i < bignum.length) { 
-			simple_product += digit * DIGITS.indexOf(bignum.charAt(i));
-		}
-		bn_product += DIGITS.indexOf(simple_product % NUMBER_OF_DIGITS);
-		carry = Math.trunc(simple_product / NUMBER_OF_DIGITS);
+	let lo_res = [];
+	let hi_res = [];
+
+	let lo_carry = 0 >>> 0;
+	let hi_carry = 0 >>> 0;
+	let ui_slice = 0 >>> 0;
+	let hi_hi_slice = 0 >>> 0;
+
+	for (let i = 0; i < bn_a.value.length || lo_carry || hi_carry; ++i) {
+		const ui_a = i < bn_a.value.length ? bn_a.value[i] : 0;
+		const lo_a = ui_a & 0xffff;
+		const hi_a = ui_a >>> 16;
+
+		ui_slice = lo_a * lo_digit + lo_carry;
+		const lo_lo_slice = ui_slice & 0xffff;
+		lo_carry = ui_slice >>> 16;
+		ui_slice = hi_a * lo_digit + lo_carry;
+		const lo_hi_slice = ui_slice & 0xffff;
+		lo_carry = ui_slice >>> 16;
+		lo_res.push((lo_hi_slice << 16) | lo_lo_slice);
+
+		ui_slice = lo_a * hi_digit + hi_carry;
+		const hi_lo_slice = ui_slice & 0xffff;
+		hi_carry = ui_slice >>> 16;
+		hi_res.push((hi_lo_slice << 16) | hi_hi_slice);
+		ui_slice = hi_a * hi_digit + hi_carry;
+		hi_carry = ui_slice >>> 16;
+		hi_hi_slice = ui_slice & 0xffff;
 	}
-*/
-			console.log("trim 3");
-	return trim(bn_res);
+
+	while (hi_res.length && ! hi_res[lo_res.length - 1]) { hi_res.pop(); }
+	while (lo_res.length && ! lo_res[lo_res.length - 1]) { lo_res.pop(); }
+
+	if (! bn_res) { bn_res = {}; }
+	bn_res.pos = true;
+	bn_res.value = new Uint32Array(lo_res);
+
+	let bn_tmp = { pos: true, value: new Uint32Array(hi_res) };
+	return add(bn_res, bn_res, bn_tmp);
 };
 
-export const mult = (bn_a, bn_b, bn_mod) => {
-	let a_neg = bn_a.length > 0 && bn_a.charAt(0) === '-';
-	let b_neg = bn_b.length > 0 && bn_b.charAt(0) === '-';
+export const mult = (bn_res, bn_a, bn_b, bn_mod) => {
 
-	if (a_neg) { bn_a = bn_a.substr(1); }
-	if (b_neg) { bn_b = bn_b.substr(1); }
 
-	let bn_result = '';
-	let prefix = '';
-	for (let i = 0; i < bn_a.length; ++i) {
-		let bn_part = prefix + mult_digit(bn_b, DIGITS.indexOf(bn_a.charAt(i)));
-		bn_result = add(bn_result, bn_part);
-		prefix += DIGITS.charAt(0);
+	const pos_res = (bn_a.pos == bn_b.pos);
+	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
+	if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
+
+	let bn_part = null;
+	bn_res = copy(bn_res, BN_ZERO);
+	for (let i = 0; i < bn_a.value.length; ++i) {
+		bn_part = mult_digit(bn_part, bn_b, bn_a.value[i]);
+		bn_part = shift(bn_part, i);
+		bn_res = add(bn_res, bn_res, bn_part);
 	}
 
-	if (a_neg !== b_neg) { bn_result = '-' + bn_result; }
-	return mod(bn_result, bn_mod);
+	bn_res.pos = pos_res;
+	return mod(bn_res, bn_res, bn_mod);
 };
 
 const div_single = (bn_mod, bn_a, bn_b) => {
@@ -302,6 +326,9 @@ const div_single = (bn_mod, bn_a, bn_b) => {
 	let ui_max = MAX_SLICE;
 	let ui_candidate;
 	let bn_candidate = null;
+
+	if (bn_a == bn_mod) { bn_a = copy(null, bn_a); }
+	if (bn_b == bn_mod) { bn_b = copy(null, bn_b); }
 
 	while (ui_min < ui_max) {
 		const ui_range = ui_max - ui_min;
@@ -316,15 +343,18 @@ const div_single = (bn_mod, bn_a, bn_b) => {
 		}
 
 	}
-	copy(bn_mod, bn_candidate);
+
+	sub(bn_mod, bn_b, bn_candidate);
 	return ui_min; 
 }
 
-const shift = (bn) => {
+const shift = (bn, count) => {
 	if (! equals(bn, BN_ZERO)) {
-		let array = bn.value.values();
-		array.push(0 >>> 0);
-		bn.value = new Uint32Array(array);
+		let array = Array.from(bn.value.values());
+		for (let i = count; i; --i) {
+			array.unshift(0 >>> 0);
+		}
+		bn.value = Uint32Array.from(array);
 	}	
 	return bn;
 }
@@ -355,8 +385,9 @@ export const div = (bn_res, bn_mod, bn_a, bn_b) => {
 	let res = [];
 	for (let i = bn_a.value.length - 1; i >= 0; --i) {
 		bn_small = fromNumber(bn_small, bn_a.value[i]);
-		shift(bn_mod);
+		bn_mod = shift(bn_mod, bn_mod, 1);
 		add(bn_mod, bn_mod, bn_small);
+		console.log("mod == " + toString(bn_mod) + ", small = " + toString(bn_small));
 		const ui_digit = div_single(bn_mod, bn_mod, bn_b);
 		if (ui_digit > 0 || res.length) {
 			res.push(ui_digit);
@@ -364,30 +395,32 @@ export const div = (bn_res, bn_mod, bn_a, bn_b) => {
 	}
 
 	if (! bn_res) { bn_res = {}; }
-	console.log("div [" + bn_res + "]");
+	console.log("div [" + res + "]");
 	bn_res.pos = res_pos;
 	bn_res.value = new Uint32Array(res.reverse());
 	return bn_res;
 };
 
-export const mod = (bignum, bn_mod) => {
-	if (! bn_mod || bn_mod.length <= 0) {
-		console.log("trim 5");
-		return trim(bignum); 
+export const mod = (bn_res, bn_num, bn_mod) => {
+	if (! bn_mod || equals(BN_ZERO, bn_mod)) {
+		return trim(bn_num); 
 	}
-	let result = div(bignum, bn_mod);
-	return result.mod;
+	div(null, bn_res, bn_num, bn_mod);
+	return bn_res
 };
 
-export const pow = (bn_base, bn_exp, bn_mod) => {
-	let result = fromNumber(1);
-	let two = fromNumber(2);
-	while (less('', bn_exp)) {
-		const dd = div(bn_exp, two);
-		const even = (dd.mod.length > 0) && (DIGITS.indexOf(dd.mod.charAt(0)) % 2 == 1);
-		if (even) { result = mult(result, bn_base, bn_mod); }
-		bn_base = mult(bn_base, bn_base, bn_mod);
-		bn_exp = dd.result;
+export const pow = (bn_res, bn_base, bn_exp, bn_mod) => {
+	bn_base = copy(null, bn_base); 
+	bn_exp = copy(null, bn_exp);
+
+	bn_res = fromNumber(bn_res, 1);
+	let bn_two = fromNumber(null, 2);
+	let bn_mod_two = {};
+	while (less(BN_ZERO, bn_exp)) {
+		bn_exp = div(bn_exp, bn_mod_two, bn_exp, bn_two);
+		const even = bn_mod_two.value.length && bn_mod_two.value[0] == 1;
+		if (even) { bn_res = mult(bn_res, bn_res, bn_base, bn_mod); }
+		bn_base = mult(bn_base, bn_base, bn_base, bn_mod);
 	}
-	return result;
+	return bn_res;
 }
