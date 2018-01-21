@@ -13,45 +13,94 @@
 		<table>
 			<tr><th>Code<th>Result<th>Expected
 			<tr><td>bn.toString(null)<td><td>0</td>
-			<tr><td>bn.toString({ pos: true, value: new Uint32Array([1234]) })<td><td>1234</td>
-			<tr><td>bn.toString(bn.fromNumber(null, 1234))<td><td>1234</td>
-			<tr><td>bn.toString(bn.fromString(null, '1234'))<td><td>1234</td>
-			<tr><td>bn.toString(bn.fromString(null, '1 234'))<td><td>1234</td>
-			<tr><td>bn.toString(bn.fromString(null, ' abc 1+-*[2]34'))<td><td>1234</td>
+			<tr><td>bn.toString({ pos: true, value: new Uint32Array([1234]) })<td><td>1 234</td>
+			<tr><td>bn.toString(bn.fromNumber(null, 1234))<td><td>1 234</td>
+			<tr><td>bn.toString(bn.fromString(null, '1234'))<td><td>1 234</td>
+			<tr><td>bn.toString(bn.fromString(null, '1 234'))<td><td>1 234</td>
+			<tr><td>bn.toString(bn.fromString(null, ' abc 1+-*[2]34'))<td><td>1 234</td>
+			<tr><td>bn.fromString(null, '4294967296').value.length<td><td>2</td>
+			<tr><td>bn.fromString(null, '4294967296').value[0]<td><td>0</td>
+			<tr><td>bn.fromString(null, '4294967296').value[1]<td><td>1</td>
+						<!--
+									<tr><td>bn.toString(bn.fromString(null, '12345678901234567890'))<td><td>12 345 678 901 234 567 890</td> 
+						-->
 		</table>
 
 		<h2>Basic Operations</h2>
 		<p>Test basic arithmetic operations.</p>
 		<table>
 			<tr><th>Code<th>Result<th>Expected
-			<tr><td>bn.toString(bn.add(null, bn.fromNumber(null, 1234), bn.fromNumber(null, 1234)))<td><td>2468</td>
-			<tr><td>bn.toString(bn.add(null, bn.fromNumber(null, 1234), bn.fromNumber(null, 2345)))<td><td>3579</td>
+			<tr><td>bn.toString(bn.add(null, bn.fromNumber(null, 1234), bn.fromNumber(null, 1234)))<td><td>2 468</td>
+			<tr><td>bn.toString(bn.add(null, bn.fromNumber(null, 1234), bn.fromNumber(null, 2345)))<td><td>3 579</td>
+			<tr><td>bn.add(null, bn.fromNumber(null, 0xffffffff), bn.fromNumber(null, 1)).value.length<td><td>2</td>
+			<tr><td>bn.add(null, bn.fromNumber(null, 0xffffffff), bn.fromNumber(null, 1)).value[0]<td><td>0</td>
+			<tr><td>bn.add(null, bn.fromNumber(null, 0xffffffff), bn.fromNumber(null, 1)).value[1]<td><td>1</td>
+			<tr><td>bn.sub(null, bn.fromString(null, '4294967299'), bn.fromNumber(null, 1)).value.length<td><td>2</td>
+			<tr><td>bn.sub(null, bn.fromString(null, '4294967299'), bn.fromNumber(null, 1)).value[0]<td><td>2</td>
+			<tr><td>bn.sub(null, bn.fromString(null, '4294967299'), bn.fromNumber(null, 1)).value[1]<td><td>1</td>
 			<tr><td>bn.toString(bn.sub(null, bn.fromNumber(null, 1234), bn.fromNumber(null, 1234)))<td><td>0</td>
-			<tr><td>bn.toString(bn.mult(null, bn.fromNumber(null, 123), bn.fromNumber(null, 10001)))<td><td>1230123</td>
-			<tr><td>bn.toString(bn.mult(null, bn.fromNumber(null, 1000), bn.fromString(null, "999888777666555444")))<td><td>999888777666555444000</td>
+			<tr><td>bn.toString(bn.mult(null, bn.fromNumber(null, 123), bn.fromNumber(null, 10001)))<td><td>1 230 123</td>
+			<tr><td>bn.mult(null, bn.fromString(null, '4294967296'), bn.fromNumber(null, 100)).value.length<td><td>2</td>
+			<tr><td>bn.mult(null, bn.fromString(null, '4294967296'), bn.fromNumber(null, 100)).value[0]<td><td>0</td>
+			<tr><td>bn.mult(null, bn.fromString(null, '4294967296'), bn.fromNumber(null, 100)).value[1]<td><td>100</td>
+			<tr><td>bn.mult(null, bn.fromString(null, '4294967299'), bn.fromNumber(null, 100)).value[0]<td><td>300</td>
+			<tr><td>bn.mult(null, bn.fromString(null, '4294967299'), bn.fromNumber(null, 100)).value[1]<td><td>100</td>
+			<!--
+						<tr><td>bn.toString(bn.mult(null, bn.fromNumber(null, 1000), bn.fromString(null, "999888777666555444")))<td><td>999888777666555444000</td>
 			<tr><td>bn.toString(bn.mult(null, bn.fromString(null, "999888777666555444"), bn.fromNumber(null, 1000)))<td><td>999888777666555444000</td>
+			-->
 			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, 123), bn.fromNumber(null, 10)))<td><td>12</td>
-			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, 21), bn.fromNumber(null, 15)); bn.toString(mod)<td><td>1</td>
+			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, 21), bn.fromNumber(null, 15)))<td><td>1</td>
 			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, 21), bn.fromNumber(null, 15)); bn.toString(mod)<td><td>6</td>
+			<tr><td>bn.div(null, null, bn.fromString(null, '429496729900'), bn.fromNumber(null, 100)).value.length<td><td>2</td>
+			<tr><td>bn.div(null, null, bn.fromString(null, '429496729900'), bn.fromNumber(null, 100)).value[0]<td><td>3</td>
+			<tr><td>bn.div(null, null, bn.fromString(null, '429496729900'), bn.fromNumber(null, 100)).value[1]<td><td>1</td>
 			<tr><td>bn.toString(bn.mod(null, bn.fromNumber(null, 123), bn.fromNumber(null, 100)))<td><td>23</td>
-			<tr><td>bn.toString(bn.pow(null, bn.fromNumber(null, 10), bn.fromNumber(null, 3)))<td><td>1000</td>
-			<tr><td>bn.toString(bn.pow(null, bn.fromNumber(null,10), bn.fromNumber(null, 8)))<td><td>100000000</td>
+			<tr><td>bn.div_single(null, bn.fromString(null, '123000000000000'), bn.fromString(null, '1000000000000'))<td><td>123</td>
+			<tr><td>bn.toString(bn.div(null, null, bn.fromString(null, '123000000000000'), bn.fromString(null, '1000000000000')))<td><td>123</td>
+			<tr><td>bn.toString(bn.pow(null, bn.fromNumber(null, 10), bn.fromNumber(null, 3)))<td><td>1 000</td>
+			<tr><td>bn.toString(bn.pow(null, bn.fromNumber(null,10), bn.fromNumber(null, 8)))<td><td>100 000 000</td>
+		</table>
+
+		<h2>Division Debugging</h2>
+
+		<table>
+			<tr><th>Code<th>Result<th>Expected
+			<tr><td>bn.div_single(null, bn.fromNumber(null, 8888), bn.fromNumber(null, 8888))<td><td>1</td>
+			<tr><td>let mod = {}; bn.div_single(mod, bn.fromNumber(null, 8888), bn.fromNumber(null, 8888)); bn.toString(mod)<td><td>0</td>
+			<tr><td>bn.div_single(null, bn.fromNumber(null, 888), bn.fromNumber(null, 8888))<td><td>0</td>
+			<tr><td>let mod = {}; bn.div_single(mod, bn.fromNumber(null, 888), bn.fromNumber(null, 8888)); bn.toString(mod)<td><td>888</td>
+			<tr><td>bn.div_single(null, bn.fromNumber(null, 88800), bn.fromNumber(null, 888))<td><td>100</td>
+			<tr><td>let mod = {}; bn.div_single(mod, bn.fromNumber(null, 88800), bn.fromNumber(null, 888)); bn.toString(mod)<td><td>0</td>
+			<tr><td>bn.div_single(null, bn.fromNumber(null, 88888), bn.fromNumber(null, 888))<td><td>100</td>
+			<tr><td>let mod = {}; bn.div_single(mod, bn.fromNumber(null, 88888), bn.fromNumber(null, 888)); bn.toString(mod)<td><td>88</td>
 		</table>
 
 		<h2>Negative Numbers</h2>
 		<p>Test basic arithmetic operations.</p>
 		<table>
 			<tr><th>Code<th>Result<th>Expected
-			<tr><td>bn.toString(bn.negate(null, bn.fromNumber(null, 6)))<td><td>-6</td>
+			<tr><td>bn.toString(bn.fromNumber(null, -6))<td><td>-6</td>
 			<tr><td>bn.toString(bn.sub(null, bn.fromNumber(null, 6), bn.fromNumber(null, 10)))<td><td>-4</td>
-			<tr><td>bn.toString(bn.add(null, bn.negate(null, bn.fromNumber(null, 5)), bn.negate(null, bn.fromNumber(null, 8))))<td><td>-13</td>
-			<tr><td>bn.toString(bn.div(null, null, bn.negate(null, bn.fromNumber(null, 10)), bn.fromNumber(null, 8)))<td><td>-1</td>
-						<tr><td>let mod = {}; bn.div(null, mod, bn.negate(null, bn.fromNumber(null, 10)), bn.fromNumber(null, 8)); bn.toString(mod)<td><td>-2</td>
-			<tr><td>bn.toString(bn.div(null, null, bn.negate(null, bn.fromNumber(null, 10)), bn.negate(null, bn.fromNumber(null, 8))))<td><td>1</td>
-			<tr><td>let mod = { value: [] }; bn.div(null, mod, bn.negate(null, bn.fromNumber(null, 10)), bn.negate(null, bn.fromNumber(null, 8))); bn.toString(mod)<td><td>-2</td>
-			<tr><td>let mod = {}; bn.div(null, mod, bn.negate(null, bn.fromNumber(null, 4)), bn.fromNumber(null, 8)); bn.toString(mod)<td><td>-4</td>
+			<tr><td>bn.toString(bn.add(null, bn.fromNumber(null, -5), bn.fromNumber(null, -8)))<td><td>-13</td>
+			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, -10), bn.fromNumber(null, 8)))<td><td>-1</td>
+			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, -10), bn.fromNumber(null, 8)); bn.toString(mod)<td><td>-2</td>
+			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, 10), bn.fromNumber(null, -8)))<td><td>-1</td>
+			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, 10), bn.fromNumber(null, -8)); bn.toString(mod)<td><td>2</td>
+			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, -10), bn.fromNumber(null, -8)))<td><td>1</td>
+			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, -10), bn.fromNumber(null, -8)); bn.toString(mod)<td><td>-2</td>
+			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, -4), bn.fromNumber(null, 8)); bn.toString(mod)<td><td>-4</td>
 			<tr><td>bn.toString(bn.sub(null, bn.fromNumber(null, 8), bn.fromNumber(null, 0)))<td><td>8</td>
 			<tr><td>bn.toString(bn.sub(null, bn.fromNumber(null, 0), bn.fromNumber(null, 8)))<td><td>-8</td>
+
+			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, 10), bn.fromNumber(null, 3)))<td><td>3</td>
+			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, 10), bn.fromNumber(null, 3)); bn.toString(mod)<td><td>1</td>
+			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, -10), bn.fromNumber(null, 3)))<td><td>-3</td>
+			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, -10), bn.fromNumber(null, 3)); bn.toString(mod)<td><td>-1</td>
+			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, -10), bn.fromNumber(null, -3)))<td><td>3</td>
+			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, -10), bn.fromNumber(null, -3)); bn.toString(mod)<td><td>-1</td>
+			<tr><td>bn.toString(bn.div(null, null, bn.fromNumber(null, 10), bn.fromNumber(null, -3)))<td><td>-3</td>
+			<tr><td>let mod = {}; bn.div(null, mod, bn.fromNumber(null, 10), bn.fromNumber(null, -3)); bn.toString(mod)<td><td>1</td>
 		</table>
 
 		<h2>Comparison Operations</h2>
@@ -69,7 +118,7 @@
 		<p>Test different formating and representation options.</p>
 		<table>
 			<tr><th>Code<th>Result<th>Expected
-			<tr><td>bn.reconfig({ thousands_separator: '.' }); bn.toString(bn.fromNumber(null, 1234))<td><td>1234</td>
+			<tr><td>bn.reconfig({ thousands_separator: '.' }); bn.toString(bn.fromNumber(null, 1234))<td><td>1.234</td>
 			<tr><td>bn.reconfig({ thousands_separator: '' }); bn.toString(bn.fromNumber(null, 1234))<td><td>1234</td>
 		</table>
 		<script src="test_all.js"></script>

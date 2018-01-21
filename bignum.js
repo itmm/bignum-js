@@ -15,11 +15,13 @@ export const reconfig = (options) => {
 reconfig();
 
 export const fromNumber = (bn_res, value) => {
+	let pos = (value >= 0);
+	if (! pos) { value = Math.abs(value); }
 	let ui_value = value >>> 0;
-	if (value < 0 || value > MAX_SLICE || value != ui_value) { console.log("failed with [" + value + "]"); return null; }
+	if (value > MAX_SLICE || value != ui_value) { err("failed with [" + value + "]"); return null; }
 
 	if (! bn_res) { bn_res = {}; }
-	bn_res.pos = true;
+	bn_res.pos = pos;
 	bn_res.value = ui_value ? new Uint32Array([ui_value]) : new Uint32Array();
 	return bn_res;
 };
@@ -109,14 +111,10 @@ export const less = (bn_a, bn_b) => {
 export const toString = (bn_num) => {
 	if (! bn_num || bn_num.value.length <= 0) { return '0'; }
 
-	let res = '' + bn_num.value[0];
-	/*
 	let res = '';
 
 	let cur = abs(null, bn_num);
 	let mod = {};
-
-	console.log("cur == " + cur.value);
 
 	const DIGITS = "0123456789";
 
@@ -125,7 +123,7 @@ export const toString = (bn_num) => {
 		div(cur, mod, cur, BN_TEN);
 		res = (mod.value.length ? DIGITS.charAt(mod.value[0]) : '0') + res;
 	}
-*/
+
 	return bn_num.pos ? res : ('-' + res);
 };
 
@@ -179,7 +177,7 @@ export const add = (bn_res, bn_a, bn_b) => {
 
 	if (! bn_res) { bn_res = {}; }
 	bn_res.pos = bn_a.pos;
-	bn_res.value = new Uint32Array(res.reverse());
+	bn_res.value = new Uint32Array(res);
 	return bn_res;
 };
 
@@ -243,7 +241,7 @@ export const sub = (bn_res, bn_a, bn_b) => {
 
 	if (! bn_res) { bn_res = {}; }
 	bn_res.pos = bn_a.pos;
-	bn_res.value = new Uint32Array(res.reverse());
+	bn_res.value = new Uint32Array(res);
 	return trim(bn_res);
 };
 
@@ -318,8 +316,8 @@ export const mult = (bn_res, bn_a, bn_b, bn_mod) => {
 	return mod(bn_res, bn_res, bn_mod);
 };
 
-const div_single = (bn_mod, bn_a, bn_b) => {
-	if (equals(bn_b, BN_ZERO)) { err("divide by zero"); return null; }
+export const div_single = (bn_mod, bn_a, bn_b) => {
+	if (equals(bn_b, BN_ZERO)) { err("divide by zero"); return 0; }
 	if (less(bn_a, bn_b)) { copy(bn_mod, bn_a); return 0; }
 
 	let ui_min = 0 >>> 0;
@@ -332,19 +330,23 @@ const div_single = (bn_mod, bn_a, bn_b) => {
 
 	while (ui_min < ui_max) {
 		const ui_range = ui_max - ui_min;
-		ui_candidate = ui_min + (ui_range >> 1);
+		ui_candidate = ui_min + (ui_range >>> 1);
+		if (ui_candidate === ui_min) { ++ui_candidate; }
 		bn_candidate = mult_digit(bn_candidate, bn_b, ui_candidate);
-		if (equals(bn_candidate, bn_a)) { 
+		if (equals(bn_candidate, bn_a)) {
 			copy(bn_mod, BN_ZERO); return ui_candidate; 
 		} else if (less(bn_candidate, bn_a)) {
 			ui_min = ui_candidate;
 		} else {
 			ui_max = ui_candidate - 1;
 		}
-
 	}
 
-	sub(bn_mod, bn_b, bn_candidate);
+	if (ui_min != ui_candidate) {
+		bn_candidate = mult_digit(bn_candidate, bn_b, ui_min);
+	}
+
+	sub(bn_mod, bn_a, bn_candidate);
 	return ui_min; 
 }
 
@@ -363,6 +365,7 @@ export const div = (bn_res, bn_mod, bn_a, bn_b) => {
 	if (! bn_res) { bn_res = {}; }
 
 	const res_pos = (bn_a.pos == bn_b.pos);
+	const mod_pos = bn_a.pos;
 
 	if (bn_res === bn_a || bn_mod === bn_a) { bn_a = copy({}, bn_a); }
 	if (bn_res === bn_b || bn_mod === bn_b) { bn_b = copy({}, bn_b); }
@@ -371,13 +374,12 @@ export const div = (bn_res, bn_mod, bn_a, bn_b) => {
 
 	if (abs_less(bn_a, bn_b)) {
 		copy(bn_res, BN_ZERO);
-		if (res_pos == bn_a.bos) {
-			copy(bn_mod, bn_a);
-		} else {
-			negate(bn_mod, bn_a);
-		}
+		copy(bn_mod, bn_a);
 		return bn_res;
 	}
+
+	bn_a = bn_a.pos ? bn_a : negate(null, bn_a);
+	bn_b = bn_b.pos ? bn_b : negate(null, bn_b);
 
 	bn_mod = copy(bn_mod, BN_ZERO);
 	let bn_small = null;
@@ -387,7 +389,6 @@ export const div = (bn_res, bn_mod, bn_a, bn_b) => {
 		bn_small = fromNumber(bn_small, bn_a.value[i]);
 		bn_mod = shift(bn_mod, bn_mod, 1);
 		add(bn_mod, bn_mod, bn_small);
-		console.log("mod == " + toString(bn_mod) + ", small = " + toString(bn_small));
 		const ui_digit = div_single(bn_mod, bn_mod, bn_b);
 		if (ui_digit > 0 || res.length) {
 			res.push(ui_digit);
@@ -395,16 +396,19 @@ export const div = (bn_res, bn_mod, bn_a, bn_b) => {
 	}
 
 	if (! bn_res) { bn_res = {}; }
-	console.log("div [" + res + "]");
 	bn_res.pos = res_pos;
 	bn_res.value = new Uint32Array(res.reverse());
+
+	if (! mod_pos) { bn_mod = negate(bn_mod, bn_mod); }
 	return bn_res;
 };
 
 export const mod = (bn_res, bn_num, bn_mod) => {
 	if (! bn_mod || equals(BN_ZERO, bn_mod)) {
-		return trim(bn_num); 
+		bn_res = copy(bn_res, bn_num);
+		return trim(bn_res); 
 	}
+	if (! bn_res) { bn_res = {}; }
 	div(null, bn_res, bn_num, bn_mod);
 	return bn_res
 };
