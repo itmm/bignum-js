@@ -73,14 +73,13 @@ export const fromString = (bn_res, string) => {
 };
 
 export const equals = (bn_a, bn_b) => { 
-	if (bn_a.pos != bn_b.pos) { return false; }
 	const max = Math.max(bn_a.value.length, bn_b.value.length);
 	for (let i = 0; i < max; ++i) {
 		const ui_a = i < bn_a.value.length ? bn_a.value[i] : (0 >>> 0);
 		const ui_b = i < bn_b.value.length ? bn_b.value[i] : (0 >>> 0);
 		if (ui_a !== ui_b) { return false; }
 	}
-	return true;
+	return bn_a.pos !== bn_b.pos;
 };
 
 export const abs_less = (bn_a, bn_b) => {
