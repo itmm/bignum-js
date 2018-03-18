@@ -66,7 +66,7 @@ export const fromString = (bn_res, string) => {
 	let res_is_zero = true;
 	let res_is_pos = string.length <= 0 || string.charAt(0) !== '-';
 
-	let bn_idx = copy(null, BN_ZERO);
+	let bn_idx = null;
 	for (let i = 0; i < string.length; ++i) {
 		const idx = string.charCodeAt(i) - ASCII_ZERO;
 		if (idx > 9 || idx < 0 || (idx === 0 && res_is_zero)) { 
@@ -77,7 +77,8 @@ export const fromString = (bn_res, string) => {
 			bn_res = fromNumber(bn_res, idx);
 		} else {
 			mult_digit(bn_res, bn_res, 10);
-			add(bn_res, bn_res, fromNumber(bn_idx, idx));
+			bn_idx = fromNumber(bn_idx, idx);
+			add(bn_res, bn_res, bn_idx);
 		}
 	}
 
@@ -156,8 +157,12 @@ export const add = (bn_res, bn_a, bn_b) => {
 		return sub(bn_res, bn_a, bn_res); 
 		}
 
-	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
-	if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
+	if (bn_res === bn_a) {
+		bn_a = copy(null, bn_a);
+		if (bn_res === bn_b) { bn_b = bn_a; }
+	} else if (bn_res === bn_b) { 
+		bn_b = copy(null, bn_b); 
+	}
 
 	let res = [];
 
@@ -198,7 +203,6 @@ export const add = (bn_res, bn_a, bn_b) => {
 	return bn_res;
 };
 
-
 const err = (message) => { if (console && console.log) { console.log(message); } };
 
 const trim = (bn) => {
@@ -221,8 +225,12 @@ export const sub = (bn_res, bn_a, bn_b) => {
 		return add(bn_res, bn_a, bn_res);
 	}
 
-	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
-	if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
+	if (bn_res === bn_a) { 
+		bn_a = copy(null, bn_a);
+		if (bn_res === bn_b) { bn_b = bn_a; }
+	} else if (bn_res === bn_b) { 
+		bn_b = copy(null, bn_b);
+	}
 
 	if (less(bn_a, bn_b)) { 
 		bn_res = sub(bn_res, bn_b, bn_a);
@@ -315,9 +323,17 @@ const mult_digit = (bn_res, bn_a, ui_b) => {
 };
 
 export const mult = (bn_res, bn_a, bn_b, bn_mod) => {
+	if (equals(bn_a, BN_ZERO) || equals(bn_b, BN_ZERO)) {
+		return copy(bn_res, BN_ZERO);
+	}
+
 	const pos_res = (bn_a.pos == bn_b.pos);
-	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
-	if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
+	if (bn_res === bn_a) {
+		bn_a = copy(null, bn_a);
+		if (bn_res === bn_b) { bn_b = bn_a; }
+	} else if (bn_res === bn_b) { 
+		bn_b = copy(null, bn_b);
+	}
 
 	let bn_part = null;
 	bn_res = copy(bn_res, BN_ZERO);
