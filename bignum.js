@@ -270,6 +270,69 @@ export const sub = (bn_res, bn_a, bn_b) => {
 	return trim(bn_res);
 };
 
+
+export const mult = (bn_res, bn_a, bn_b, bn_mod) => {
+	if (equals(bn_a, BN_ZERO) || equals(bn_b, BN_ZERO)) {
+		return copy(bn_res, BN_ZERO);
+	}
+
+	if (bn_res === bn_a) {
+		bn_a = copy(null, bn_a);
+		if (bn_res === bn_b) { bn_b = bn_a; }
+	} else if (bn_res === bn_b) { 
+		bn_b = copy(null, bn_b);
+	}
+
+	if (! bn_res) { bn_res = {}; }
+	bn_res.pos = bn_a.pos === bn_b.pos;
+	const a_len = bn_a.value.length;
+	const b_len = bn_b.value.length;
+	bn_res.value = new Uint32Array(a_len * b_len);
+
+	for (let i = 0; i < a_len; ++i) {
+		const ui_a = bn_a.value[i];
+		if (! ui_a) { continue; }
+
+		let k = 0 >>> 0;
+		const hi_a = ui_a >>> 16;
+		const li_a = ui_a & 0xffff;
+
+		let w = i;
+		for (let j = 0; k != 0 || j < b_len; ++j, ++w) {
+			const ui_b = j < b_len ? bn_b.value[j] : 0 >>> 0;
+			const hi_b = ui_b >>> 16;
+			const li_b = ui_b & 0xffff;
+
+			const hi_k = k >>> 16;
+			const li_k = k & 0xffff;
+
+			const ui_w = bn_res.value[w];
+			const hi_w = ui_w >>> 16;
+			const li_w = ui_w & 0xffff;
+
+			let li_res = li_a * li_b;
+			let mi_res = hi_a * li_b + li_a * hi_b;
+			let hi_res = hi_a * hi_b;
+			hi_res += mi_res >>> 16;
+			mi_res = mi_res & 0xffff;
+			mi_res += li_res >>> 16;
+			li_res = li_res & 0xffff;
+
+			li_res += li_w + li_k;
+			mi_res += li_res >>> 16;
+			li_res = li_res & 0xffff;
+			mi_res += hi_w + hi_k;
+			hi_res += mi_res >>> 16;
+			mi_res = mi_res & 0xffff;
+
+			bn_res.value[w] = (mi_res << 16) + li_res;
+			k = hi_res;
+		}
+	}
+
+	return mod(bn_res, bn_res, bn_mod);
+};
+
 const mult_digit = (bn_res, bn_a, ui_b) => {
 	switch (ui_b) {
 		case 0: return copy(bn_res, BN_ZERO);
@@ -320,31 +383,6 @@ const mult_digit = (bn_res, bn_a, ui_b) => {
 
 	let bn_tmp = { pos: true, value: new Uint32Array(hi_res) };
 	return add(bn_res, bn_res, bn_tmp);
-};
-
-export const mult = (bn_res, bn_a, bn_b, bn_mod) => {
-	if (equals(bn_a, BN_ZERO) || equals(bn_b, BN_ZERO)) {
-		return copy(bn_res, BN_ZERO);
-	}
-
-	const pos_res = (bn_a.pos == bn_b.pos);
-	if (bn_res === bn_a) {
-		bn_a = copy(null, bn_a);
-		if (bn_res === bn_b) { bn_b = bn_a; }
-	} else if (bn_res === bn_b) { 
-		bn_b = copy(null, bn_b);
-	}
-
-	let bn_part = null;
-	bn_res = copy(bn_res, BN_ZERO);
-	for (let i = 0; i < bn_a.value.length; ++i) {
-		bn_part = mult_digit(bn_part, bn_b, bn_a.value[i]);
-		bn_part = shift(bn_part, i);
-		bn_res = add(bn_res, bn_res, bn_part);
-	}
-
-	bn_res.pos = pos_res;
-	return mod(bn_res, bn_res, bn_mod);
 };
 
 export const div_single = (bn_mod, bn_a, bn_b) => {
