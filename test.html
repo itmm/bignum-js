@@ -13,6 +13,12 @@
 		<table>
 			<tr><th>Code<th>Result<th>Expected
 			<tr><td>bn.toString(null)<td><td>0</td>
+			<tr><td>bn.fromNumber(null, 1234).pos<td><td>true</td>
+			<tr><td>bn.fromNumber(null, 1234).value.length<td><td>1</td>
+			<tr><td>bn.fromNumber(null, 1234).value[0]<td><td>1234</td>
+			<tr><td>bn.fromNumber(null, -1234).pos<td><td>false</td>
+			<tr><td>bn.fromNumber(null, -1234).value.length<td><td>1</td>
+			<tr><td>bn.fromNumber(null, -1234).value[0]<td><td>1234</td>
 			<tr><td>bn.toString({ pos: true, value: new Uint32Array([1234]) })<td><td>1 234</td>
 			<tr><td>bn.toString(bn.fromNumber(null, 1234))<td><td>1 234</td>
 			<tr><td>bn.toString(bn.fromString(null, '1234'))<td><td>1 234</td>
@@ -21,9 +27,9 @@
 			<tr><td>bn.fromString(null, '4294967296').value.length<td><td>2</td>
 			<tr><td>bn.fromString(null, '4294967296').value[0]<td><td>0</td>
 			<tr><td>bn.fromString(null, '4294967296').value[1]<td><td>1</td>
-						<!--
-									<tr><td>bn.toString(bn.fromString(null, '12345678901234567890'))<td><td>12 345 678 901 234 567 890</td> 
-						-->
+			<!--
+				<tr><td>bn.toString(bn.fromString(null, '12345678901234567890'))<td><td>12 345 678 901 234 567 890</td> 
+			-->
 		</table>
 
 		<h2>Basic Operations</h2>

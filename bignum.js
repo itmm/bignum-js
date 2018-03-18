@@ -79,7 +79,7 @@ export const equals = (bn_a, bn_b) => {
 		const ui_b = i < bn_b.value.length ? bn_b.value[i] : (0 >>> 0);
 		if (ui_a !== ui_b) { return false; }
 	}
-	return bn_a.pos !== bn_b.pos;
+	return bn_a.pos === bn_b.pos;
 };
 
 export const abs_less = (bn_a, bn_b) => {
