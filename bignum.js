@@ -8,7 +8,9 @@ const BN_SHIFT = { pos:true, value: new Uint32Array([0, 1]) };
 
 export const reconfig = (options) => {
 	if (! options) { options = {}; }
-	if (! ('thousands_separator' in options)) { options.thousands_separator = ' '; }
+	if (! ('thousands_separator' in options)) { 
+		options.thousands_separator = ' ';
+	}
 	THOUSANDS_SEPARATOR = options.thousands_separator;
 }
 
@@ -18,7 +20,10 @@ export const fromNumber = (bn_res, value) => {
 	let pos = (value >= 0);
 	if (! pos) { value = Math.abs(value); }
 	let ui_value = value >>> 0;
-	if (value > MAX_SLICE || value != ui_value) { err("failed with [" + value + "]"); return null; }
+	if (value > MAX_SLICE || value != ui_value) { 
+		err("failed with [" + value + "]");
+		return null; 
+	}
 
 	if (! bn_res) { bn_res = {}; }
 	bn_res.pos = pos;
@@ -58,15 +63,28 @@ export const abs = (bn_res, bn_num) => {
 
 export const fromString = (bn_res, string) => {
 	bn_res = fromNumber(bn_res, 0);
-	bn_res.pos = string.length <= 0 || string.charAt(0) !== '-';
+	let res_is_zero = true;
+	let res_is_pos = string.length <= 0 || string.charAt(0) !== '-';
 
 	let bn_idx = copy(null, BN_ZERO);
-
 	for (let i = 0; i < string.length; ++i) {
 		const idx = string.charCodeAt(i) - ASCII_ZERO;
-		if (idx > 9 || idx < 0 || (idx === 0 && equals(bn_res, BN_ZERO))) { continue; }
-		mult_digit(bn_res, bn_res, 10);
-		add(bn_res, bn_res, fromNumber(bn_idx, idx));
+		if (idx > 9 || idx < 0 || (idx === 0 && res_is_zero)) { 
+			continue; 
+		}
+		if (res_is_zero) {
+			res_is_zero = false;
+			bn_res = fromNumber(bn_res, idx);
+		} else {
+			mult_digit(bn_res, bn_res, 10);
+			add(bn_res, bn_res, fromNumber(bn_idx, idx));
+		}
+	}
+
+	if (res_is_zero) {
+		bn_res = copy(bn_res, BN_ZERO);
+	} else if (! res_is_pos) {
+		bn_res = negate(bn_res, bn_res);
 	}
 
 	return bn_res;
@@ -297,8 +315,6 @@ const mult_digit = (bn_res, bn_a, ui_b) => {
 };
 
 export const mult = (bn_res, bn_a, bn_b, bn_mod) => {
-
-
 	const pos_res = (bn_a.pos == bn_b.pos);
 	if (bn_res === bn_a) { bn_a = copy(null, bn_a); }
 	if (bn_res === bn_b) { bn_b = copy(null, bn_b); }
